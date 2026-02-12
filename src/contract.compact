@@ -1,0 +1,41 @@
+// HTLC (Hash Time-Locked Contract) for Midnight
+// Supports creating hash-locked envelopes and claiming them with secrets
+
+circuit HTLCContract {
+  // Ledger state - tracks the last secret hash
+  ledger HTLCLedger {
+    lastSecretHash: Bytes<32>;
+  }
+
+  // Create a new hash-locked envelope with a secret hash
+  @transaction
+  export circuit createEnvelope(secretHash: Bytes<32>): Void {
+    // Store the secret hash in the ledger
+    HTLCLedger.lastSecretHash = secretHash;
+  }
+
+  // Claim an envelope by revealing the secret
+  @transaction
+  export circuit claimEnvelope(secret: Bytes<32>, expectedHash: Bytes<32>): Bytes<1> {
+    // Hash the revealed secret
+    const actualHash: Bytes<32> = sha256(secret);
+    
+    // Verify the hash matches the expected hash
+    if (actualHash == expectedHash) {
+      // Update ledger with the revealed secret hash
+      HTLCLedger.lastSecretHash = actualHash;
+      
+      // Return success (0x01)
+      return 0x01;
+    } else {
+      // Return failure (0x00)
+      return 0x00;
+    }
+  }
+
+  // Query to get the last secret hash from ledger (read-only)
+  @query
+  export circuit getLastSecretHash(): Bytes<32> {
+    return HTLCLedger.lastSecretHash;
+  }
+}

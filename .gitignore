@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.local
+build/
+.deployment-mnemonic
+WALLET_CONFIG.json
+
+# Keep compiled contracts but ignore compiler cache
+contracts/managed/htlc/compiler/

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTLC Contract - Test Page</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .content {
+      padding: 2rem;
+    }
+
+    .status-box {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-box.healthy {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+    }
+
+    .status-box.unhealthy {
+      background: #f8d7da;
+      border-left: 4px solid #dc3545;
+    }
+
+    .card {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #555;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: transform 0.2s;
+      margin-right: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #6c757d;
+    }
+
+    .result {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 6px;
+      background: white;
+      border: 2px solid #ddd;
+    }
+
+    .result.success {
+      border-color: #28a745;
+      background: #d4edda;
+    }
+
+    .result.error {
+      border-color: #dc3545;
+      background: #f8d7da;
+    }
+
+    code {
+      background: #e9ecef;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+
+    .tx-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .tx-item {
+      background: white;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      border-left: 4px solid #667eea;
+    }
+
+    .tx-item small {
+      color: #666;
+    }
+
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔒 HTLC Contract Test Page</h1>
+      <p>Time-Locked Hash Envelopes - Local Runtime</p>
+    </header>
+
+    <div class="content">
+      <!-- Server Status -->
+      <div id="serverStatus" class="status-box unhealthy">
+        <span id="statusText">⏳ Checking server...</span>
+      </div>
+
+      <!-- Contract State -->
+      <div class="card">
+        <h2>📊 Contract State</h2>
+        <div id="contractState">
+          <p>Loading...</p>
+        </div>
+        <button onclick="fetchState()">🔄 Refresh</button>
+      </div>
+
+      <!-- Generate Secret -->
+      <div class="card">
+        <h2>🎲 Generate Secret</h2>
+        <p>Generate a random secret and its hash</p>
+        <button onclick="generateSecret()">Generate New Secret</button>
+        <div id="generateResult"></div>
+      </div>
+
+      <!-- Create Envelope -->
+      <div class="card">
+        <h2>📦 Create Envelope</h2>
+        <div class="input-group">
+          <label>Secret Hash (64 hex characters):</label>
+          <input type="text" id="secretHashInput" placeholder="Enter 64-character hex hash" maxlength="64">
+        </div>
+        <button onclick="createEnvelope()">📦 Create Envelope</button>
+        <div id="createResult"></div>
+      </div>
+
+      <!-- Claim Envelope -->
+      <div class="card">
+        <h2>🔓 Claim Envelope</h2>
+        <div class="input-group">
+          <label>Secret (64 hex characters):</label>
+          <input type="text" id="secretInput" placeholder="Enter the secret" maxlength="64">
+        </div>
+        <div class="input-group">
+          <label>Expected Hash (64 hex characters):</label>
+          <input type="text" id="expectedHashInput" placeholder="Enter expected hash" maxlength="64">
+        </div>
+        <button onclick="claimEnvelope()">🔓 Claim Envelope</button>
+        <div id="claimResult"></div>
+      </div>
+
+      <!-- Transaction History -->
+      <div class="card">
+        <h2>📜 Transaction History</h2>
+        <button onclick="fetchTransactions()">🔄 Load Transactions</button>
+        <div id="txList" class="tx-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+
+    // Check server health on load
+    async function checkHealth() {
+      try {
+        const response = await fetch(`${API_URL}/health`);
+        if (response.ok) {
+          document.getElementById('serverStatus').className = 'status-box healthy';
+          document.getElementById('statusText').textContent = '✅ Server running on http://localhost:3000';
+          fetchState();
+        } else {
+          throw new Error('Server unhealthy');
+        }
+      } catch (error) {
+        document.getElementById('serverStatus').className = 'status-box unhealthy';
+        document.getElementById('statusText').textContent = '❌ Server not running. Start with: npm start';
+      }
+    }
+
+    // Fetch contract state
+    async function fetchState() {
+      try {
+        const response = await fetch(`${API_URL}/state`);
+        const data = await response.json();
+        const isEmpty = data.lastSecretHash === '00'.repeat(32);
+        document.getElementById('contractState').innerHTML = `
+          <p><strong>Last Secret Hash:</strong><br>
+          <code>${isEmpty ? '(empty - no envelopes created)' : data.lastSecretHash}</code></p>
+          <p><strong>Total Transactions:</strong> ${data.totalTransactions}</p>
+        `;
+      } catch (error) {
+        document.getElementById('contractState').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+      }
+    }
+
+    // Generate secret
+    async function generateSecret() {
+      try {
+        const response = await fetch(`${API_URL}/generateSecret`);
+        const data = await response.json();
+        document.getElementById('generateResult').innerHTML = `
+          <div class="result success">
+            <h3>✅ Secret Generated!</h3>
+            <p><strong>Secret:</strong><br><code>${data.secret}</code></p>
+            <p><strong>Hash:</strong><br><code>${data.hash}</code></p>
+            <p><em>${data.note}</em></p>
+            <button onclick="document.getElementById('secretHashInput').value = '${data.hash}'">
+              Copy Hash to Create Form
+            </button>
+            <button onclick="document.getElementById('secretInput').value = '${data.secret}'">
+              Copy Secret to Claim Form
+            </button>
+          </div>
+        `;
+        document.getElementById('expectedHashInput').value = data.hash;
+      } catch (error) {
+        document.getElementById('generateResult').innerHTML = `
+          <div class="result error"><strong>Error:</strong> ${error.message}</div>
+        `;
+      }
+    }
+
+    // Create envelope
+    async function createEnvelope() {
+      const secretHash = document.getElementById('secretHashInput').value;
+      if (secretHash.length !== 64) {
+        alert('Please enter a valid 64-character hex hash');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/createEnvelope`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secretHash })
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          document.getElementById('createResult').innerHTML = `
+            <div class="result success">
+              <h3>✅ Envelope Created!</h3>
+              <p><strong>TX ID:</strong> ${data.txId}</p>
+              <p><strong>Secret Hash:</strong><br><code>${data.secretHash}</code></p>
+            </div>
+          `;
+          fetchState();
+          document.getElementById('secretHashInput').value = '';
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        document.getElementById('createResult').innerHTML = `
+          <div class="result error"><strong>Error:</strong> ${error.message}</div>
+        `;
+      }
+    }
+
+    // Claim envelope
+    async function claimEnvelope() {
+      const secret = document.getElementById('secretInput').value;
+      const expectedHash = document.getElementById('expectedHashInput').value;
+      
+      if (secret.length !== 64 || expectedHash.length !== 64) {
+        alert('Please enter valid 64-character hex values');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/claimEnvelope`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ secret, expectedHash })
+        });
+        const data = await response.json();
+        
+        const resultClass = data.success ? 'success' : 'error';
+        const icon = data.success ? '✅' : '❌';
+        
+        document.getElementById('claimResult').innerHTML = `
+          <div class="result ${resultClass}">
+            <h3>${icon} ${data.message}</h3>
+            <p><strong>TX ID:</strong> ${data.txId}</p>
+            <p><strong>Verified:</strong> ${data.verified ? 'Yes' : 'No'}</p>
+          </div>
+        `;
+        
+        if (data.success) {
+          fetchState();
+          document.getElementById('secretInput').value = '';
+          document.getElementById('expectedHashInput').value = '';
+        }
+      } catch (error) {
+        document.getElementById('claimResult').innerHTML = `
+          <div class="result error"><strong>Error:</strong> ${error.message}</div>
+        `;
+      }
+    }
+
+    // Fetch transactions
+    async function fetchTransactions() {
+      try {
+        const response = await fetch(`${API_URL}/transactions`);
+        const data = await response.json();
+        
+        if (data.transactions.length === 0) {
+          document.getElementById('txList').innerHTML = '<p>No transactions yet</p>';
+          return;
+        }
+
+        const html = data.transactions.map(tx => `
+          <div class="tx-item">
+            <strong>${tx.type}</strong><br>
+            <small>TX: ${tx.txId}</small><br>
+            <small>Time: ${new Date(tx.timestamp).toLocaleString()}</small><br>
+            ${tx.secretHash ? `<small>Hash: ${tx.secretHash.substring(0, 32)}...</small>` : ''}
+            ${tx.success !== undefined ? `<small>Status: ${tx.success ? '✅ Success' : '❌ Failed'}</small>` : ''}
+          </div>
+        `).join('');
+        
+        document.getElementById('txList').innerHTML = html;
+      } catch (error) {
+        document.getElementById('txList').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+      }
+    }
+
+    // Check health on page load
+    checkHealth();
+    setInterval(checkHealth, 5000); // Check every 5 seconds
+  </script>
+</body>
+</html>

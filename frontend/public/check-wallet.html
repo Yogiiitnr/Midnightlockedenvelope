@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midnight Wallet Checker</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .box {
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        h1 { color: #00d9ff; }
+        h2 { color: #ff6b6b; }
+        pre {
+            background: #0f0f0f;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .success { color: #51cf66; }
+        .error { color: #ff6b6b; }
+        .warning { color: #ffd93d; }
+        button {
+            background: #00d9ff;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover { background: #00b8d4; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Midnight Wallet Detection Tool</h1>
+    <p>This tool checks what wallet APIs are available in your browser.</p>
+
+    <div class="box">
+        <h2>Step 1: Check Window Objects</h2>
+        <button onclick="checkWindowObjects()">Check Available APIs</button>
+        <pre id="windowCheck">Click button to check...</pre>
+    </div>
+
+    <div class="box">
+        <h2>Step 2: Check Cardano Wallets</h2>
+        <button onclick="checkCardanoWallets()">Check Cardano APIs</button>
+        <pre id="cardanoCheck">Click button to check...</pre>
+    </div>
+
+    <div class="box">
+        <h2>Step 3: Check Midnight API</h2>
+        <button onclick="checkMidnightAPI()">Check Midnight API</button>
+        <pre id="midnightCheck">Click button to check...</pre>
+    </div>
+
+    <div class="box">
+        <h2>Step 4: Try Lace Connection</h2>
+        <button onclick="tryLaceConnection()">Connect to Lace</button>
+        <pre id="laceCheck">Click button to test...</pre>
+    </div>
+
+    <script>
+        function checkWindowObjects() {
+            const output = document.getElementById('windowCheck');
+            let result = '=== Browser Window Object Check ===\n\n';
+            
+            result += 'window.cardano exists: ' + (typeof window.cardano !== 'undefined' ? '✅ YES' : '❌ NO') + '\n';
+            result += 'window.midnight exists: ' + (typeof window.midnight !== 'undefined' ? '✅ YES' : '❌ NO') + '\n';
+            result += 'window.ethereum exists: ' + (typeof window.ethereum !== 'undefined' ? '✅ YES' : '❌ NO') + '\n\n';
+            
+            if (typeof window.cardano !== 'undefined') {
+                result += '--- Cardano Wallets Found ---\n';
+                const wallets = Object.keys(window.cardano);
+                if (wallets.length > 0) {
+                    wallets.forEach(wallet => {
+                        result += `  • ${wallet}\n`;
+                    });
+                } else {
+                    result += '  (No wallets found)\n';
+                }
+            }
+            
+            if (typeof window.midnight !== 'undefined') {
+                result += '\n--- Midnight API Found ---\n';
+                result += 'window.midnight.lace: ' + (window.midnight.lace ? '✅ EXISTS' : '❌ NOT FOUND') + '\n';
+                if (window.midnight.lace) {
+                    result += 'API methods: ' + Object.keys(window.midnight.lace).join(', ') + '\n';
+                }
+            }
+            
+            output.textContent = result;
+        }
+
+        function checkCardanoWallets() {
+            const output = document.getElementById('cardanoCheck');
+            let result = '=== Cardano Wallet APIs ===\n\n';
+            
+            if (typeof window.cardano === 'undefined') {
+                result += '❌ No Cardano API found\n';
+                result += 'Install a Cardano wallet extension like Lace, Nami, or Eternl\n';
+                output.textContent = result;
+                return;
+            }
+            
+            const wallets = Object.keys(window.cardano);
+            result += `Found ${wallets.length} wallet(s):\n\n`;
+            
+            wallets.forEach(walletName => {
+                const wallet = window.cardano[walletName];
+                result += `📱 ${walletName}:\n`;
+                result += `  - name: ${wallet.name || 'N/A'}\n`;
+                result += `  - icon: ${wallet.icon ? '✅' : '❌'}\n`;
+                result += `  - apiVersion: ${wallet.apiVersion || 'N/A'}\n`;
+                result += `  - enable function: ${typeof wallet.enable === 'function' ? '✅' : '❌'}\n`;
+                result += `  - isEnabled function: ${typeof wallet.isEnabled === 'function' ? '✅' : '❌'}\n\n`;
+            });
+            
+            output.textContent = result;
+        }
+
+        function checkMidnightAPI() {
+            const output = document.getElementById('midnightCheck');
+            let result = '=== Midnight API Check ===\n\n';
+            
+            if (typeof window.midnight === 'undefined') {
+                result += '❌ window.midnight not found!\n\n';
+                result += '⚠️  This means either:\n';
+                result += '  1. Lace Wallet doesn\'t have Midnight support yet\n';
+                result += '  2. You need to enable Midnight mode in Lace\n';
+                result += '  3. You need a Midnight-specific browser extension\n';
+                result += '  4. The Midnight SDK needs to inject this API\n\n';
+                result += '💡 Check Lace Wallet settings for "Developer Mode" or "Midnight Network"\n';
+            } else {
+                result += '✅ window.midnight exists!\n\n';
+                
+                if (window.midnight.lace) {
+                    result += '✅ window.midnight.lace exists!\n\n';
+                    result += 'Available methods:\n';
+                    Object.keys(window.midnight.lace).forEach(method => {
+                        result += `  • ${method}: ${typeof window.midnight.lace[method]}\n`;
+                    });
+                } else {
+                    result += '❌ window.midnight.lace not found\n';
+                    result += 'window.midnight has: ' + Object.keys(window.midnight).join(', ') + '\n';
+                }
+            }
+            
+            output.textContent = result;
+        }
+
+        async function tryLaceConnection() {
+            const output = document.getElementById('laceCheck');
+            let result = '=== Lace Connection Test ===\n\n';
+            
+            // Try Cardano Lace first
+            if (window.cardano?.lace) {
+                result += '🔷 Found Cardano Lace wallet\n';
+                result += 'Testing connection...\n\n';
+                
+                try {
+                    const isEnabled = await window.cardano.lace.isEnabled();
+                    result += `Is enabled: ${isEnabled}\n`;
+                    
+                    if (!isEnabled) {
+                        result += 'Requesting permission...\n';
+                        const api = await window.cardano.lace.enable();
+                        result += '✅ Permission granted!\n';
+                        result += `API object: ${api ? 'Received' : 'Not received'}\n`;
+                        
+                        if (api && api.getUsedAddresses) {
+                            const addresses = await api.getUsedAddresses();
+                            result += `Addresses: ${addresses.length}\n`;
+                            if (addresses.length > 0) {
+                                result += `First address: ${addresses[0].substring(0, 30)}...\n`;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    result += `❌ Error: ${error.message}\n`;
+                }
+            }
+            
+            // Try Midnight Lace
+            if (window.midnight?.lace) {
+                result += '\n🌙 Found Midnight Lace API\n';
+                result += 'Testing Midnight connection...\n\n';
+                
+                try {
+                    const state = await window.midnight.lace.state();
+                    result += `Is enabled: ${state.isEnabled}\n`;
+                    result += `Is connected: ${state.isConnected}\n`;
+                    
+                    if (!state.isEnabled) {
+                        result += 'Enabling...\n';
+                        await window.midnight.lace.enable();
+                        result += '✅ Enabled!\n';
+                    }
+                } catch (error) {
+                    result += `❌ Error: ${error.message}\n`;
+                }
+            }
+            
+            if (!window.cardano?.lace && !window.midnight?.lace) {
+                result += '❌ No Lace wallet API found!\n\n';
+                result += 'Please ensure:\n';
+                result += '  1. Lace Wallet extension is installed\n';
+                result += '  2. Extension is enabled in your browser\n';
+                result += '  3. You\'ve reloaded this page after installing\n';
+            }
+            
+            output.textContent = result;
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            checkWindowObjects();
+        });
+    </script>
+</body>
+</html>

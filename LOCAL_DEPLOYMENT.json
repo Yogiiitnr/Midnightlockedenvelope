@@ -1,0 +1,14 @@
+{
+  "contractAddress": "pending_deployment",
+  "walletAddresses": {
+    "unshielded": "mn_addr_undeployed1dms7en3p7s4s0kg9ep9nr5438myhwjlg6dcsfqw6cs9std8sknqsvn3ltw",
+    "shielded": "mn_shield-addr_undeployed1gd0q8g9aehgvushdl9w0jmke645l8s2fd0cmkhryesj0lffkh8nzldczu77gcjf50djhrzqe9x6wlp8u9kgzvxkhyctpyfppa45cr0g0nusf8",
+    "dust": "mn_dust_undeployed1daf96p8afxn72845wmtumr54sn7udgce7sw9qrp8pw39t6gcg85s7qznhr"
+  },
+  "network": "undeployed",
+  "status": "ready_for_deployment",
+  "compiledAt": "2026-02-12T10:46:00.000Z",
+  "nodeRpc": "ws://localhost:9944",
+  "proofServer": "http://localhost:6300",
+  "indexerUrl": "http://localhost:8088"
+}

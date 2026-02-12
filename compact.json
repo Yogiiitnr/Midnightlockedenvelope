@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/midnight-ntwrk/compact/main/packages/compact/src/cli/compact.schema.json",
+  "projects": [
+    {
+      "name": "htlc",
+      "version": "0.1.0",
+      "type": "contract",
+      "compiler": {
+        "sources": ["src/contract.compact"],
+        "output": {
+          "type": "managed",
+          "contractName": "htlc",
+          "path": "contracts"
+        }
+      }
+    }
+  ]
+}

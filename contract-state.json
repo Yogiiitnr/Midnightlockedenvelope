@@ -1,0 +1,19 @@
+{
+  "envelopes": [
+    [
+      1,
+      {
+        "id": 1,
+        "secretHash": "cd5d63b85153376d4f446dcf64a3d325a78e85813c8fc664d261b18af54ff287",
+        "sender": "mn_addr_local_v3r0i0twoma",
+        "recipient": "mn_addr_recipient_zoxx23pn",
+        "amount": "1000000",
+        "timelock": 1770957506589,
+        "claimed": false,
+        "createdAt": 1770871106589
+      }
+    ]
+  ],
+  "nextEnvelopeId": 2,
+  "lastSecretHash": "cd5d63b85153376d4f446dcf64a3d325a78e85813c8fc664d261b18af54ff287"
+}

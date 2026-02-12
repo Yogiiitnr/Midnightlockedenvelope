@@ -1,0 +1,268 @@
+import { useState, useEffect } from 'react';
+import { 
+  isLaceWalletInstalled, 
+  connectLaceWallet, 
+  getWalletAddress 
+} from '../midnight/providers';
+import { 
+  deployHTLCContract, 
+  checkServicesHealth,
+  getEstimatedDeploymentCost 
+} from '../midnight/api';
+import type { WalletState, ContractDeploymentState } from '../midnight/types';
+
+export function ContractDeployment() {
+  const [walletState, setWalletState] = useState<WalletState>({
+    address: null,
+    balance: null,
+    isConnected: false
+  });
+
+  const [deploymentState, setDeploymentState] = useState<ContractDeploymentState>({
+    contractAddress: null,
+    isDeploying: false,
+    error: null,
+    txHash: null
+  });
+
+  const [servicesHealthy, setServicesHealthy] = useState<boolean | null>(null);
+  const [isCheckingServices, setIsCheckingServices] = useState(false);
+
+  // Check if Lace Wallet is installed
+  const walletInstalled = isLaceWalletInstalled();
+
+  // Check services health on mount
+  useEffect(() => {
+    checkServices();
+  }, []);
+
+  const checkServices = async () => {
+    setIsCheckingServices(true);
+    try {
+      const health = await checkServicesHealth();
+      setServicesHealthy(health.allHealthy);
+      
+      if (!health.allHealthy) {
+        console.warn('⚠️ Some services are unhealthy:', health.errors);
+      }
+    } catch (error) {
+      console.error('Failed to check services:', error);
+      setServicesHealthy(false);
+    } finally {
+      setIsCheckingServices(false);
+    }
+  };
+
+  const handleConnectWallet = async () => {
+    if (!walletInstalled) {
+      alert('Lace Wallet not installed! Please install it from https://www.lace.io/');
+      return;
+    }
+
+    try {
+      const connected = await connectLaceWallet();
+      
+      if (connected) {
+        const address = await getWalletAddress();
+        
+        setWalletState({
+          address,
+          balance: 'Loading...',
+          isConnected: true
+        });
+      } else {
+        alert('Failed to connect to wallet. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+      alert('Error: ' + (error as Error).message);
+    }
+  };
+
+  const handleDeployContract = async () => {
+    if (!walletState.isConnected) {
+      alert('Please connect your wallet first!');
+      return;
+    }
+
+    if (!servicesHealthy) {
+      const confirmDeploy = confirm(
+        'Warning: Some backend services may not be healthy. Deploy anyway?'
+      );
+      if (!confirmDeploy) return;
+    }
+
+    setDeploymentState({
+      contractAddress: null,
+      isDeploying: true,
+      error: null,
+      txHash: null
+    });
+
+    try {
+      const result = await deployHTLCContract();
+
+      setDeploymentState({
+        contractAddress: result.contractAddress,
+        isDeploying: false,
+        error: null,
+        txHash: result.transactionHash
+      });
+    } catch (error) {
+      console.error('Deployment error:', error);
+      setDeploymentState({
+        contractAddress: null,
+        isDeploying: false,
+        error: (error as Error).message || 'Unknown error occurred',
+        txHash: null
+      });
+    }
+  };
+
+  return (
+    <div className="deployment-container">
+      {/* Header */}
+      <div className="header">
+        <h1>Midnight HTLC Contract</h1>
+        <p className="subtitle">Hash Time-Locked Contract Deployment on Local Network</p>
+      </div>
+
+      {/* Services Status */}
+      <div className="glass-card">
+        <h2>Backend Services</h2>
+        <div className="services-status">
+          {isCheckingServices ? (
+            <p>Checking services...</p>
+          ) : servicesHealthy === null ? (
+            <p>Services status unknown</p>
+          ) : servicesHealthy ? (
+            <p className="status-healthy">✅ All services healthy</p>
+          ) : (
+            <p className="status-unhealthy">⚠️ Some services are down</p>
+          )}
+          <button 
+            className="btn-secondary" 
+            onClick={checkServices}
+            disabled={isCheckingServices}
+          >
+            {isCheckingServices ? 'Checking...' : 'Recheck Services'}
+          </button>
+        </div>
+      </div>
+
+      {/* Wallet Connection */}
+      <div className="glass-card">
+        <h2>Wallet Connection</h2>
+        
+        {!walletInstalled && !isDemoMode ? (
+          <div className="warning-box">
+            <p>⚠️ Lace Wallet not detected</p>
+            <p className="small">
+              Install Lace Wallet for real deployment, or continue in demo mode
+            </p>
+            <button className="btn-primary" onClick={handleConnectWallet}>
+              Continue in Demo Mode
+            </button>
+          </div>
+        ) : !walletState.isConnected ? (
+          <div>
+            <p>{isDemoMode ? 'Connect mock wallet to continue' : 'Connect your Lace Wallet to deploy the contract'}</p>
+            <button className="btn-primary" onClick={handleConnectWallet}>
+              {isDemoMode ? '🎭 Connect Demo Wallet' : 'Connect Wallet'}
+            </button>
+          </div>
+        ) : (
+          <div className="wallet-info">
+            <p className="status-healthy">✅ Wallet Connected {isDemoMode && '(Demo)'}</p>
+            <div className? (
+          <div className="warning-box">
+            <p>⚠️ Lace Wallet not detected</p>
+            <p className="small">
+              Please install Lace Wallet from: <a href="https://www.lace.io/" target="_blank">https://www.lace.io/</a>
+            </p>
+            <p className="small">
+              Make sure to set the network to "undeployed" in Lace Wallet settings.
+            </p>
+          </div>
+        ) : !walletState.isConnected ? (
+          <div>
+            <p>Connect your Lace Wallet to deploy the contract</p>
+            <button className="btn-primary" onClick={handleConnectWallet}>
+              Connect Wallet
+            </button>
+          </div>
+        ) : (
+          <div className="wallet-info">
+            <p className="status-healthy">✅ Wallet Connected</p>
+            <div className="info-row">
+              <span className="label">Address:</span>
+              <span className="value address">{walletState.address}
+              <span className="value address">{deploymentState.contractAddress}</span>
+            </div>
+            {deploymentState.txHash && (
+              <div className="info-row">
+                <span className="label">Transaction:</span>
+                <span className="value">{deploymentState.txHash}</span>
+              </div>
+            )}
+          </div>
+        ) : deploymentState.error ? (
+          <div className="error-box">
+            <p>❌ Deployment Failed</p>
+            <p className="error-message">{deploymentState.error}</p>
+            <button 
+              className="btn-primary" 
+              onClick={handleDeployContract}
+              disabled={!walletState.isConnected}
+            >
+              Retry Deployment
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="deployment-info">
+              <p>Deploy the HTLC contract to Midnight blockchain</p>
+              <div className="info-row">
+                <span className="label">Estimated Cost:</span>
+                <span className="value">{getEstimatedDeploymentCost().toLocaleString()} tokens</span>
+              </div>
+            </div>
+            
+            <button 
+              className="btn-primary" 
+              onClick={handleDeployContract}
+              disabled={!walletState.isConnected || deploymentState.isDeploying}
+            >
+              {deploymentState.isDeploying ? (
+                <>
+                  <span className="spinner"></span>
+                  Deploying Contract...
+                </>
+              ) : (
+                'Deploy Contract'
+              )}
+            </button>
+
+            {deploymentState.isDeploying && (
+              <p className="deployment-notice">
+                ⏳ Deployment may take several minutes. Please do not close this page.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Instructions */}
+      <div className="glass-card instructions">
+        <h2>Setup Instructions</h2>
+        <ol>
+          <li>Start midnight-local-network in WSL2 Ubuntu</li>
+          <li>Fund your wallet using: <code>yarn fund &lt;address&gt;</code></li>
+          <li>Ensure Lace Wallet is set to "undeployed" network</li>
+          <li>Connect your wallet above</li>
+          <li>Click "Deploy Contract" and confirm in wallet</li>
+        </ol>
+      </div>
+    </div>
+  );
+}
