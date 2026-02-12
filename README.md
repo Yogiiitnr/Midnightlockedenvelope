@@ -1,6 +1,18 @@
 # 🌙 Midnight HTLC - Privacy-Preserving Hash Time-Locked Contracts
 
 Link of the Demo Video    https://drive.google.com/drive/folders/1LiCRKPeUqDwpVdPtUsF5wlxNXowqBLqx?usp=drive_link
+Website screenshots   <img width="1888" height="818" alt="image" src="https://github.com/user-attachments/assets/64d8f177-e42d-4a1d-8358-7a7b036b02f6" />
+
+
+
+
+
+
+
+
+
+
+
 
 ![Midnight Network](https://img.shields.io/badge/Built%20on-Midnight%20Network-6366f1)
 ![Compact Language](https://img.shields.io/badge/Smart%20Contract-Compact-10b981)
