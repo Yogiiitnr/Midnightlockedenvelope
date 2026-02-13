@@ -1,6 +1,10 @@
 # 🌙 Midnight HTLC - Privacy-Preserving Hash Time-Locked Contracts
 
 Link of the Demo Video    https://drive.google.com/drive/folders/1LiCRKPeUqDwpVdPtUsF5wlxNXowqBLqx?usp=drive_link
+Contract Address -     htlc_edff3c023440ffa02ef2c0e72df13410
+
+
+
 Website screenshots   <img width="1888" height="818" alt="image" src="https://github.com/user-attachments/assets/64d8f177-e42d-4a1d-8358-7a7b036b02f6" />
 
 
